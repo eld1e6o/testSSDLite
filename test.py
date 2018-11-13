@@ -59,7 +59,7 @@ time = pygame.time
 
 sounds =  []
 #sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alto_ahi_loca_rafa-b5P2zQHbTWA.wav"))
-sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alto.wav"))
+sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/test.wav"))
 sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alarm.wav"))
 statusPlay = sounds[0].play()
 sounds[0].stop()
@@ -110,7 +110,9 @@ font                   = cv2.FONT_HERSHEY_SIMPLEX
 fontScale              = 1
 lineType               = 2
 
-logoIni = cv2.imread("/home/diego/Code/AI tour/logo-ini.png")
+logo = cv2.imread("/home/diego/Code/AI tour/logo.png")
+logo = cv2.resize(logo, (0,0), fx=0.15, fy=0.15) 
+
 
 while(True):
     
@@ -162,6 +164,7 @@ while(True):
     
     bbox_list = api.api(rotated90, 0.3)
     for i in bbox_list:
+        #if tamaño continue
         #Imprimo persona
         cv2.rectangle(rotated90, i[0], i[1], (125, 255, 51), thickness=2)
 
@@ -170,7 +173,16 @@ while(True):
         ax1,ax2 =  int((i[1][0] - i[0][0])/2), int((i[1][1]-i[0][1])/2)
         center = (cx,cy)        
         axes = (ax1,ax2)
-        
+    
+        bottomLeftCornerOfText = (int(i[0][0]), int(i[0][1]))
+        fontColor              = (0,255,0)
+        text = str(i[1][0] - i[0][0]) + " x " +  str(i[1][1] - i[0][1])
+        cv2.putText(rotated90,text, 
+            bottomLeftCornerOfText, 
+            font, 
+            fontScale,
+            fontColor,
+            lineType)
         
         centerPeople = (int((i[1][0] + i[0][0])/2), int(i[1][1]))
         if centerPeople[1]<imMaskZoneInterior.shape[1] and centerPeople[0]<imMaskZoneInterior.shape[0]:
@@ -186,7 +198,6 @@ while(True):
 
             alertLevel = 1
         elif toDetectZone == 255:
-            
 
             cv2.circle(rotated90, centerPeople, 30, (0, 0, 255), -1)
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(0,0,255), 1)
@@ -250,7 +261,7 @@ while(True):
         bottomLeftCornerOfText = (10, 30)
         fontColor              = (0,255,0)
         
-        cv2.putText(rotated90,'Persona detectada en la zona de alerta!', 
+        cv2.putText(rotated90,'Persona detectada en la zona de alerta! ', 
             bottomLeftCornerOfText, 
             font, 
             fontScale,
@@ -271,7 +282,17 @@ while(True):
     alertLevelActual = alertLevel
     
     #rotated90 = cv2.bitwise_and(rotated90, imgOrig, mask = imMaskPeople)
+    
+    (logoH, logoW) = logo.shape[:2]
+    (hFinal, wFinal) = rotated90.shape[:2]
 
+    
+    rotated90[hFinal - logoH:hFinal, wFinal - logoW:wFinal]=logo[:,:]
+
+    print(logoH, logoW)
+    cv2.imshow('logo', logo)
+    
+    
     cv2.imshow('Salida', rotated90)
     cv2.imshow('Zona 1', imMaskZoneInterior)
     
