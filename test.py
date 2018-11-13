@@ -115,6 +115,10 @@ logo = cv2.resize(logo, (0,0), fx=0.15, fy=0.15)
 
 faceCascade = cv2.CascadeClassifier("/opt/ocv/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml")
 
+
+peopDet = None
+    
+
 while(True):
     
     ret, img = cap.read()
@@ -143,6 +147,9 @@ while(True):
     (h, w) = rotated90.shape[:2]
 
     maxwh = max(w,h)
+    minwh = min(w,h)
+    
+    toFill = (maxwh - minwh)/2
 
     imdest = np.zeros([maxwh, maxwh, 3], dtype=img.dtype)
 
@@ -185,9 +192,22 @@ while(True):
             fontColor,
             lineType)
         
-        peopCropped = rotated90[int(i[0][1]):int(i[1][1]), int(i[0][0]):int(i[1][0])]
-
+        peopCropped = np.copy(rotated90[int(i[0][1]):int(i[1][1]), int(i[0][0]):int(i[1][0])])
+        gray = cv2.cvtColor(peopCropped, cv2.COLOR_BGR2GRAY)
+        
+        faces = faceCascade.detectMultiScale(
+            gray,
+            scaleFactor=1.1,
+            minNeighbors=5,
+            minSize=(30, 30),
+            flags = cv2.CASCADE_SCALE_IMAGE
+        )
+        for (x, y, w, h) in faces:
+            cv2.rectangle(peopCropped, (x, y), (x+w, y+h), (0, 255, 0), 2)
+            
+            
         cv2.imshow('crop', peopCropped)
+        
                 
         centerPeople = (int((i[1][0] + i[0][0])/2), int(i[1][1]))
         if centerPeople[1]<imMaskZoneInterior.shape[1] and centerPeople[0]<imMaskZoneInterior.shape[0]:
@@ -197,12 +217,17 @@ while(True):
         
         if toDetectZone == 128:
             
+            if alertLevel < 1:
+                peopDet = peopCropped
+            
             cv2.circle(rotated90, centerPeople, 15, (0,255, 255), -1)
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(255,0,0), 1)
             cv2.ellipse(imMaskPeople,center,axes,angle,0,360,(255), -1)
 
             alertLevel = 1
         elif toDetectZone == 255:
+            
+            peopDet = peopCropped
 
             cv2.circle(rotated90, centerPeople, 30, (0, 0, 255), -1)
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(0,0,255), 1)
@@ -210,6 +235,8 @@ while(True):
             cv2.ellipse(imMaskPeople,center,axes,angle,0,360,(255), -1)
 
             alertLevel = 2
+
+
     if len(bbox_list)==0:
         bbox_list_old = bbox_list
                     
@@ -263,7 +290,7 @@ while(True):
     
     #imprimo texto
     if nowPlaying == 1:
-        bottomLeftCornerOfText = (10, 30)
+        bottomLeftCornerOfText = (int(toFill) + 10, 30)
         fontColor              = (0,255,0)
         
         cv2.putText(rotated90,'Persona detectada en la zona de alerta! ', 
@@ -273,7 +300,7 @@ while(True):
             fontColor,
             lineType)
     elif nowPlaying == 2:
-        bottomLeftCornerOfText = (10, 30)
+        bottomLeftCornerOfText = (int(toFill) + 10, 30)
         fontColor              = (0,0,255)
         
         cv2.putText(rotated90,'Persona detectada en la zona prohibida!', 
@@ -290,6 +317,19 @@ while(True):
     
     (logoH, logoW) = logo.shape[:2]
     (hFinal, wFinal) = rotated90.shape[:2]
+    
+    if peopDet is not None:
+        (peopH, peopW) = peopDet.shape[:2]
+        factor = toFill / peopW
+        peopDetResized = cv2.resize(peopDet, (0,0), fx=factor, fy=factor)
+        cv2.imshow('im', peopDetResized)
+        (peopH, peopW) = peopDetResized.shape[:2]
+        if peopH>=hFinal:
+            peopDetResized = peopDetResized[0:hFinal, :]
+            peopH = hFinal
+        
+        else:
+            rotated90[0:peopH,0:peopW] = peopDetResized
     
     rotated90[hFinal - logoH:hFinal, wFinal - logoW:wFinal]=logo[:,:]
 
