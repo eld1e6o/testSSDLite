@@ -113,6 +113,7 @@ lineType               = 2
 logo = cv2.imread("/home/diego/Code/AI tour/logo.png")
 logo = cv2.resize(logo, (0,0), fx=0.15, fy=0.15) 
 
+faceCascade = cv2.CascadeClassifier("/opt/ocv/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml")
 
 while(True):
     
@@ -184,6 +185,10 @@ while(True):
             fontColor,
             lineType)
         
+        peopCropped = rotated90[int(i[0][1]):int(i[1][1]), int(i[0][0]):int(i[1][0])]
+
+        cv2.imshow('crop', peopCropped)
+                
         centerPeople = (int((i[1][0] + i[0][0])/2), int(i[1][1]))
         if centerPeople[1]<imMaskZoneInterior.shape[1] and centerPeople[0]<imMaskZoneInterior.shape[0]:
             toDetectZone = imMaskZoneInterior[centerPeople[1], centerPeople[0]]
@@ -285,11 +290,10 @@ while(True):
     
     (logoH, logoW) = logo.shape[:2]
     (hFinal, wFinal) = rotated90.shape[:2]
-
     
     rotated90[hFinal - logoH:hFinal, wFinal - logoW:wFinal]=logo[:,:]
 
-    print(logoH, logoW)
+    #print(logoH, logoW)
     cv2.imshow('logo', logo)
     
     
