@@ -65,7 +65,7 @@ statusPlay = sounds[0].play()
 sounds[0].stop()
 sounds[1].stop()
 
-cap = cv2.VideoCapture(sys.argv[1])
+cap = cv2.VideoCapture(0)#sys.argv[1])
 
 rotate = True 
 
@@ -117,6 +117,7 @@ faceCascade = cv2.CascadeClassifier("/opt/ocv/share/OpenCV/haarcascades/haarcasc
 
 
 peopDet = None
+facesLast = None
     
 
 while(True):
@@ -204,10 +205,8 @@ while(True):
         )
         for (x, y, w, h) in faces:
             cv2.rectangle(peopCropped, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            
-            
-        cv2.imshow('crop', peopCropped)
-        
+               
+        #cv2.imshow('crop', peopCropped)
                 
         centerPeople = (int((i[1][0] + i[0][0])/2), int(i[1][1]))
         if centerPeople[1]<imMaskZoneInterior.shape[1] and centerPeople[0]<imMaskZoneInterior.shape[0]:
@@ -219,6 +218,10 @@ while(True):
             
             if alertLevel < 1:
                 peopDet = peopCropped
+                if len(faces) == 1:
+                    #Defino facesLast
+                    facesLast = peopCropped[y:y+h,x:x+w]
+                    #cv2.imshow('cara', facesLast)
             
             cv2.circle(rotated90, centerPeople, 15, (0,255, 255), -1)
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(255,0,0), 1)
@@ -228,6 +231,12 @@ while(True):
         elif toDetectZone == 255:
             
             peopDet = peopCropped
+            
+            if len(faces) == 1:
+                #Defino facesLast
+                facesLast = peopCropped[y:y+h,x:x+w]
+                #cv2.imshow('cara', facesLast)
+        
 
             cv2.circle(rotated90, centerPeople, 30, (0, 0, 255), -1)
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(0,0,255), 1)
@@ -318,30 +327,51 @@ while(True):
     (logoH, logoW) = logo.shape[:2]
     (hFinal, wFinal) = rotated90.shape[:2]
     
+    #Pego el cuerpo entero al costado
+    startX = 50
+    
+            
+    if facesLast is not None:
+        (faceH, faceW) = facesLast.shape[:2]
+        factor = toFill / faceW
+        facesDetResized = cv2.resize(facesLast, (0,0), fx=factor, fy=factor)
+        cv2.imshow('im', facesDetResized)
+        (faceH, faceW) = facesDetResized.shape[:2]
+        if faceH + startX>=hFinal:
+            facesDetResized = facesDetResized[0:hFinal - startX, :]
+            facesH = hFinal - startX
+                
+        rotated90[startX:faceH + startX,0:faceW] = facesDetResized
+
+        startX = startX + faceH
+        
     if peopDet is not None:
         (peopH, peopW) = peopDet.shape[:2]
         factor = toFill / peopW
         peopDetResized = cv2.resize(peopDet, (0,0), fx=factor, fy=factor)
         cv2.imshow('im', peopDetResized)
         (peopH, peopW) = peopDetResized.shape[:2]
-        if peopH>=hFinal:
-            peopDetResized = peopDetResized[0:hFinal, :]
-            peopH = hFinal
+        if peopH+ startX>=hFinal:
+            peopDetResized = peopDetResized[0:hFinal - startX, :]
+            peopH = hFinal - startX
         
-        else:
-            rotated90[0:peopH,0:peopW] = peopDetResized
+        
+        rotated90[startX:peopH + startX,0:peopW] = peopDetResized
+        
+    
+    #Pego la cara al costado
     
     rotated90[hFinal - logoH:hFinal, wFinal - logoW:wFinal]=logo[:,:]
 
     #print(logoH, logoW)
-    cv2.imshow('logo', logo)
+    #cv2.imshow('logo', logo)
     
     
     cv2.imshow('Salida', rotated90)
     cv2.imshow('Zona 1', imMaskZoneInterior)
     
-    cv2.imshow('mask1', imMaskPeople)
-    cv2.imshow('orig', imgOrig)
+    #cv2.imshow('mask1', imMaskPeople)
+    #cv2.imshow('orig', imgOrig)
 
     if cv2.waitKey(100) & 0xFF == ord('q'):
         break#plt.imshow(img[:,:,::-1])
