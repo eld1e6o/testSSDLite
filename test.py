@@ -124,6 +124,9 @@ facesLast = None
     
 repeats = 0
 
+imMaskRGB = cv2.cvtColor(imMaskZoneInterior, cv2.COLOR_GRAY2BGR)
+
+
 while(True):
     
     ret, img = cap.read()
@@ -180,6 +183,7 @@ while(True):
     alertLevel = 0
     
     bbox_list = api.api(rotated90, 0.35)
+    
     for i in bbox_list:
         #if tamaño continue
         #Imprimo persona
@@ -263,6 +267,9 @@ while(True):
             cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1])+40), 15, (0, 0, 0), -1)
             cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) ), 18, (0,0, 255), -1)
             cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) + 80), 15, (0,0, 0), -1)
+            
+
+    rotated90 = cv2.addWeighted(rotated90, 0.7, imMaskRGB[0:624, 0:624], 0.3, 0)
             
     #Hasta acá imprime
     toFill = (maxwh - minwh+200)/2
@@ -364,7 +371,7 @@ while(True):
         (faceH, faceW) = facesLast.shape[:2]
         factor = toFill / faceW
         facesDetResized = cv2.resize(facesLast, (0,0), fx=factor, fy=factor)
-        cv2.imshow('im', facesDetResized)
+        #cv2.imshow('im', facesDetResized)
         (faceH, faceW) = facesDetResized.shape[:2]
         if faceH + startX>=hFinal:
             facesDetResized = facesDetResized[0:hFinal - startX, :]
@@ -378,7 +385,7 @@ while(True):
         (peopH, peopW) = peopDet.shape[:2]
         factor = toFill / peopW
         peopDetResized = cv2.resize(peopDet, (0,0), fx=factor, fy=factor)
-        cv2.imshow('im', peopDetResized)
+        #cv2.imshow('im', peopDetResized)
         (peopH, peopW) = peopDetResized.shape[:2]
         if peopH+ startX>=hFinal:
             peopDetResized = peopDetResized[0:hFinal - startX, :]
@@ -392,13 +399,13 @@ while(True):
     
     rotated90[hFinal - logoH:hFinal, wFinal - logoW:wFinal]=logo[:,:]
 
+
     #print(logoH, logoW)
     #cv2.imshow('logo', logo)
     
-    
+    cv2.imshow('Zona 1', imMaskZoneInterior)    
     cv2.imshow('Salida', rotated90)
-    cv2.imshow('Zona 1', imMaskZoneInterior)
-    
+
     #cv2.imshow('mask1', imMaskPeople)
     #cv2.imshow('orig', imgOrig)
 
