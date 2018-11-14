@@ -59,8 +59,8 @@ time = pygame.time
 
 sounds =  []
 #sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alto_ahi_loca_rafa-b5P2zQHbTWA.wav"))
-sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/test.wav"))
-sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alarm_short.wav"))
+sounds.append(pygame.mixer.Sound("test.wav"))
+sounds.append(pygame.mixer.Sound("alarm_short.wav"))
 statusPlay = sounds[0].play()
 sounds[0].stop()
 sounds[1].stop()
