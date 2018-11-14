@@ -89,10 +89,13 @@ img = cv2.resize(img, (0,0), fx=0.5, fy=0.5)
 
 maxwh = max(img.shape[:2])
 
+alertGray = 64
+warningGray = 255
+
 imMaskZoneInterior = np.zeros((maxwh, maxwh), np.uint8)
 #imMaskZoneExterior = np.zeros((maxwh, maxwh), np.uint8)
-cv2.ellipse(imMaskZoneInterior,centerSueloExterior,axesSueloExterior,angle,0,180,(128), -1)
-cv2.ellipse(imMaskZoneInterior,centerSueloInterior,axesSueloInterior,angle,0,180,(255), -1)
+cv2.ellipse(imMaskZoneInterior,centerSueloExterior,axesSueloExterior,angle,0,180,(alertGray), -1)
+cv2.ellipse(imMaskZoneInterior,centerSueloInterior,axesSueloInterior,angle,0,180,(warningGray), -1)
 cv2.fillPoly(imMaskZoneInterior, delimitedZoneInterior, (255))
 
 kernel = np.ones((5,5),np.uint8)
@@ -226,7 +229,7 @@ while(True):
         else:
             toDetectZone = 0
         
-        if toDetectZone == 128:
+        if toDetectZone == alertGray:
             
             if alertLevel < 1:
                 peopDet = peopCropped
@@ -247,7 +250,7 @@ while(True):
             cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) + 80), 15, (0,0, 0), -1)
 
 
-        elif toDetectZone == 255:
+        elif toDetectZone == warningGray:
             cv2.rectangle(rotated90, i[0], i[1], (0, 0, 255), thickness=2)
 
             
@@ -349,8 +352,14 @@ while(True):
             lineType)
 
     fontColor              = (255,255,255)
-    cv2.putText(rotated90,'REGISTRO:', 
-        (10, 10), 
+    cv2.putText(rotated90,'ULTIMO', 
+        (10, 25), 
+        font, 
+        fontScale,
+        fontColor,
+        lineType)        
+    cv2.putText(rotated90,'REGISTRO', 
+        (10, 55), 
         font, 
         fontScale,
         fontColor,
@@ -364,7 +373,7 @@ while(True):
     (hFinal, wFinal) = rotated90.shape[:2]
     
     #Pego el cuerpo entero al costado
-    startX = 50
+    startX = 70
     
             
     if facesLast is not None:
