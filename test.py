@@ -323,9 +323,9 @@ while(True):
             relayStatus = 1
 
     elif needToPlay == 1 and nowPlaying == 0:
-        statusPlay = sounds[0].play()
-        nowPlaying = 1
-        
+        #statusPlay = sounds[0].play()
+        #nowPlaying = 1
+        _ = 1
     #if nowPlaying == 0:
     #    rotated90[:,:] = rotated90[:,:]/2
     
