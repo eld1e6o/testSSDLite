@@ -60,25 +60,28 @@ time = pygame.time
 sounds =  []
 #sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alto_ahi_loca_rafa-b5P2zQHbTWA.wav"))
 sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/test.wav"))
-sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alarm.wav"))
+sounds.append(pygame.mixer.Sound("/home/diego/Code/AI tour/alarm_short.wav"))
 statusPlay = sounds[0].play()
 sounds[0].stop()
 sounds[1].stop()
 
-cap = cv2.VideoCapture(0)#sys.argv[1])
+cap = cv2.VideoCapture(sys.argv[1])
 
 rotate = True 
 
-centerSueloInterior = (483, 644)
-axesSueloInterior = (228, 76)
+#centerSueloInterior = (483, 644)
+#axesSueloInterior = (228, 76)
+centerSueloInterior = (395 - 100, 436) 
+axesSueloInterior = (185, 50)
 
 centerSueloExterior = centerSueloInterior
-axesSueloExterior = (228, 176)
+axesSueloExterior = (228, 276)
 
 angle = 0
 
-delimitedZoneInterior = [np.array([ [255, 641], [276, 302], [652, 317], [712, 641] ], np.int32)]
-delimitedZoneExterior = [np.array([ [255, 641], [276, 302], [652, 317], [712, 641] ], np.int32)]
+#delimitedZoneInterior = [np.array([ [255, 641], [276, 302], [652, 317], [712, 641] ], np.int32)]
+delimitedZoneInterior = [np.array([ [210, 432], [178, 207], [648, 227], [579, 440] ], np.int32)] + np.array([-100, 0])# Final
+delimitedZoneExterior = [np.array([ [210, 432], [178, 207], [648, 227], [579, 440] ], np.int32)] # Final
 #delimitedZoneExterior = delimitedZoneExterior - np.array([100, 100], np.int32)
 
 ret, img = cap.read() # Para obtener las dimensiones
@@ -111,7 +114,7 @@ fontScale              = 1
 lineType               = 2
 
 logo = cv2.imread("/home/diego/Code/AI tour/logo.png")
-logo = cv2.resize(logo, (0,0), fx=0.15, fy=0.15) 
+logo = cv2.resize(logo, (0,0), fx=0.1, fy=0.1) 
 
 faceCascade = cv2.CascadeClassifier("/opt/ocv/share/OpenCV/haarcascades/haarcascade_frontalface_alt.xml")
 
@@ -119,6 +122,7 @@ faceCascade = cv2.CascadeClassifier("/opt/ocv/share/OpenCV/haarcascades/haarcasc
 peopDet = None
 facesLast = None
     
+repeats = 0
 
 while(True):
     
@@ -131,6 +135,10 @@ while(True):
         relay_data_encode = str.encode("off\n")
         relay_device.write(relay_data_encode)
         quit()
+    
+    (hImg, wImg) = img.shape[:2]
+
+    img = img[int(hImg*0.05):int(hImg*0.95), int(wImg*0.25):int(wImg*0.9)]
     img = cv2.resize(img, (0,0), fx=0.5, fy=0.5) 
     img = cv2.flip(img, 1)
     
@@ -150,7 +158,7 @@ while(True):
     maxwh = max(w,h)
     minwh = min(w,h)
     
-    toFill = (maxwh - minwh)/2
+    #toFill = (maxwh - minwh)/2
 
     imdest = np.zeros([maxwh, maxwh, 3], dtype=img.dtype)
 
@@ -171,7 +179,7 @@ while(True):
         
     alertLevel = 0
     
-    bbox_list = api.api(rotated90, 0.3)
+    bbox_list = api.api(rotated90, 0.35)
     for i in bbox_list:
         #if tamaño continue
         #Imprimo persona
@@ -223,12 +231,21 @@ while(True):
                     facesLast = peopCropped[y:y+h,x:x+w]
                     #cv2.imshow('cara', facesLast)
             
-            cv2.circle(rotated90, centerPeople, 15, (0,255, 255), -1)
+            cv2.circle(rotated90, centerPeople, 15, (255, 255, 255), -1)
+            
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(255,0,0), 1)
             cv2.ellipse(imMaskPeople,center,axes,angle,0,360,(255), -1)
 
             alertLevel = 1
+
+            cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) + 40), 18, (0,255, 255), -1)
+            cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1])), 15, (0,0, 0), -1)
+            cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) + 80), 15, (0,0, 0), -1)
+
+
         elif toDetectZone == 255:
+            cv2.rectangle(rotated90, i[0], i[1], (0, 0, 255), thickness=2)
+
             
             peopDet = peopCropped
             
@@ -236,19 +253,24 @@ while(True):
                 #Defino facesLast
                 facesLast = peopCropped[y:y+h,x:x+w]
                 #cv2.imshow('cara', facesLast)
-        
 
-            cv2.circle(rotated90, centerPeople, 30, (0, 0, 255), -1)
+            cv2.circle(rotated90, centerPeople, 15, (255, 255, 255), -1)
             #cv2.ellipse(rotated90,center,axes,angle,0,360,(0,0,255), 1)
 
             cv2.ellipse(imMaskPeople,center,axes,angle,0,360,(255), -1)
 
             alertLevel = 2
-
-
-    if len(bbox_list)==0:
-        bbox_list_old = bbox_list
-                    
+            cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1])+40), 15, (0, 0, 0), -1)
+            cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) ), 18, (0,0, 255), -1)
+            cv2.circle(rotated90, (int(i[1][0] + 40), int(i[0][1]) + 80), 15, (0,0, 0), -1)
+            
+    #Hasta acá imprime
+    toFill = (maxwh - minwh+200)/2
+    (h, w) = rotated90.shape[:2]
+    imdest = np.zeros([maxwh, maxwh+200, 3], dtype=img.dtype)
+    imdest[:,100:w+100] = rotated90
+    rotated90 = imdest
+    
     if alertLevel == 2:
         if alertLevelActual <2:
             #forzar los cambios:
@@ -302,7 +324,7 @@ while(True):
         bottomLeftCornerOfText = (int(toFill) + 10, 30)
         fontColor              = (0,255,0)
         
-        cv2.putText(rotated90,'Persona detectada en la zona de alerta! ', 
+        cv2.putText(rotated90,'Persona en zona de alerta!', 
             bottomLeftCornerOfText, 
             font, 
             fontScale,
@@ -312,13 +334,20 @@ while(True):
         bottomLeftCornerOfText = (int(toFill) + 10, 30)
         fontColor              = (0,0,255)
         
-        cv2.putText(rotated90,'Persona detectada en la zona prohibida!', 
+        cv2.putText(rotated90,'Persona en zona prohibida!', 
             bottomLeftCornerOfText, 
             font, 
             fontScale,
             fontColor,
             lineType)
-        
+
+    fontColor              = (255,255,255)
+    cv2.putText(rotated90,'REGISTRO:', 
+        (10, 10), 
+        font, 
+        fontScale,
+        fontColor,
+        lineType)        
 
     alertLevelActual = alertLevel
     
@@ -373,7 +402,7 @@ while(True):
     #cv2.imshow('mask1', imMaskPeople)
     #cv2.imshow('orig', imgOrig)
 
-    if cv2.waitKey(100) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break#plt.imshow(img[:,:,::-1])
         
 if relayPresent is False:
